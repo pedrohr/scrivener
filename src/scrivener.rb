@@ -51,7 +51,7 @@ class Scrivener
       text.gsub!(pt, '\1')
     end
 
-    [/\&lt\;ref(.+)\&gt\;/, "&quot;", /\{\{(.+)\}\}/, /==(.+)==/, "*"].each do |pt|
+    [/\&lt\;ref(.+)\&gt\;/, "&quot;", /\{\{(.+)\}\}/, /==(.+)==/, "*", "----", "#", /''+/].each do |pt|
       text.gsub!(pt, "")
     end
 

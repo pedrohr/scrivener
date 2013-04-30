@@ -18,6 +18,9 @@ class ScrivenerTest < Test::Unit::TestCase
       &lt;!--Anarcho-communist Joseph Déjacque, the first person to use the term &quot;libertarian&quot; in a political sense and self-proclaimed advocate of libertarianism, needs to be added here. His work and stances on anarchism are very relevant to this particular section of the article. Additionally, his criticisms of Pierre-Joseph Proudhon's mutualism are very relevant here.--&gt;
       Honestly, [[William Godwin]] was a crazy man.
       * A silly link
+      ----
+      # A numbered list
+      '''bold text'''
 "
 
     @scrivener = Scrivener.new(@wikipedia_dump)
@@ -61,7 +64,9 @@ class ScrivenerTest < Test::Unit::TestCase
                   "His work and stances on anarchism are very relevant to this particular section of the article.",
                   "Additionally, his criticisms of Pierre-Joseph Proudhon's mutualism are very relevant here.",
                  "Honestly, <http://dbpedia.org/resource/William_Godwin> was a crazy man.",
-                 "A silly link."])
+                 "A silly link.",
+                 "A numbered list.",
+                 "bold text."])
   end
 
   def test_should_replace_title_names_by_links
