@@ -64,10 +64,6 @@ class Scrivener
     [/\&lt\;ref(.+)\/\&gt\;/, "\"", "&quot;",/\{\{(.+)\}\}/, /==(.+)==/, "*", "----", "#", /''+/].each do |pt|
       text.gsub!(pt, "")
     end
-
-#    [/<(.+)>/].each do |pt|
-#      text.gsub!(pt, '\1')
-#    end
   end
 
   def parse_text(title, text)
