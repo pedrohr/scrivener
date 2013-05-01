@@ -31,7 +31,9 @@ class Scrivener
 
   def parse_pages
     read_pages
+    counter = 1
     @articles.each do |art|
+      print "\rReading article #{counter} of #{@articles.size}..."
       art[1] = parse_text(art[0], art[1])
     end
   end
@@ -41,9 +43,14 @@ class Scrivener
 
     # check if its a File inside a bracket
     if text.include?("File:")
-      params = text.split(",")
-      params[0] = "<http://dbpedia@@@org/resource/" + params[0].match(/\[\[(.+)\]\]/)[1].gsub(" ", "_") + ">"
-      text = params.join(",")
+      params = text.split("|")
+      valid = []
+      params.each do |p|
+        if (p.match(/\[\[(.+)\]\]/))
+          valid.push(p.gsub(/\[\[(.+)\]\]/) {|block| "<http://dbpedia@@@org/resource/" + block[2..block.size-3].gsub(" ", "_") + ">"})
+        end
+      end
+      text = valid.join(",")
     else
       text = "<http://dbpedia@@@org/resource/" + text.gsub(' ', '_') + ">"
     end
