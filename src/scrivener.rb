@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'nokogiri'
 require 'punkt-segmenter'
 
@@ -8,15 +9,16 @@ class Scrivener
     @raw_wikipedia_dump_file = File.open(filename, 'r')
 
     unless @raw_wikipedia_dump_file.nil?
-
       print "\rLoading XML file..."
-      @processed_wikipedia_dump = Nokogiri::XML(@raw_wikipedia_dump_file.read) do |config|
+      @processed_wikipedia_dump = Nokogiri::XML(@raw_wikipedia_dump_file.read, nil, 'UTF-8') do |config|
         config.strict
       end
     end
   end
 
-  def parse_pages
+  def read_pages
+    @raw_wikipedia_dump_file = nil
+
     pages = @processed_wikipedia_dump.search("page")
 
     @articles = []
@@ -25,6 +27,13 @@ class Scrivener
     end
 
     @processed_wikipedia_dump = nil
+  end
+
+  def parse_pages
+    read_pages
+    @articles.each do |art|
+      art[1] = parse_text(art[0], art[1])
+    end
   end
 
   def clear_inside_brackets(text)
@@ -40,31 +49,32 @@ class Scrivener
     end
 
     # replacing . for @@@ in links in order to avoid future misspliting in sentences
-
     return text
   end
 
-  def clean_text(text)
+  def clear_text(title, text)
     text.gsub!(/\[\[(.+)\]\]/) {|block| clear_inside_brackets(block)}
 
+    text.gsub!(Regexp.new(title, true), "<http://dbpedia@@@org/resource/" + title.gsub(' ', '_') + ">")
+    
     [/\&lt\;!--(.+)--\&gt\;/].each do |pt|
       text.gsub!(pt, '\1')
     end
-
-    [/\&lt\;ref(.+)\&gt\;/, "&quot;", /\{\{(.+)\}\}/, /==(.+)==/, "*", "----", "#", /''+/].each do |pt|
+    
+    [/\&lt\;ref(.+)\/\&gt\;/, "\"", "&quot;",/\{\{(.+)\}\}/, /==(.+)==/, "*", "----", "#", /''+/].each do |pt|
       text.gsub!(pt, "")
     end
 
-    [/\&lt\;(.+)\&gt\;/].each do |pt|
-      text.gsub!(pt, '\1')
-    end
+#    [/<(.+)>/].each do |pt|
+#      text.gsub!(pt, '\1')
+#    end
   end
 
-  def parse_text(text)
+  def parse_text(title, text)
     sentences = []
 
     # resolve links and remove quotes and references
-    clean_text(text)
+    clear_text(title, text)
 
     text.each_line do |paragraph|
       prospective = paragraph.split(".")

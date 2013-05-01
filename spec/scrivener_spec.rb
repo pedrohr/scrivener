@@ -23,6 +23,8 @@ class ScrivenerTest < Test::Unit::TestCase
       '''bold text'''
 "
 
+    @example_title = "Anarchism"
+
     @scrivener = Scrivener.new(@wikipedia_dump)
   end
 
@@ -49,7 +51,7 @@ class ScrivenerTest < Test::Unit::TestCase
   end
 
   def test_should_detect_articles
-    @scrivener.parse_pages
+    @scrivener.read_pages
 
     assert_equal(@scrivener.articles.size, 2)
 
@@ -57,11 +59,10 @@ class ScrivenerTest < Test::Unit::TestCase
   end
 
   def test_should_break_text_into_lines_and_resolve_links
-    @scrivener.parse_pages
-    assert_equal(@scrivener.parse_text(@example_text), 
-                 ["<http://dbpedia.org/resource/William_Godwin>, the first to formulate the political and economical conceptions of anarchism, even though he did not give that name to the ideas developed in his work.",
+    assert_equal(@scrivener.parse_text(@example_title, @example_text), 
+                 ["<http://dbpedia.org/resource/William_Godwin>, the first to formulate the political and economical conceptions of <http://dbpedia.org/resource/Anarchism>, even though he did not give that name to the ideas developed in his work.",
                   "Anarcho-communist Joseph Déjacque, the first person to use the term libertarian in a political sense and self-proclaimed advocate of libertarianism, needs to be added here.",
-                  "His work and stances on anarchism are very relevant to this particular section of the article.",
+                  "His work and stances on <http://dbpedia.org/resource/Anarchism> are very relevant to this particular section of the article.",
                   "Additionally, his criticisms of Pierre-Joseph Proudhon's mutualism are very relevant here.",
                  "Honestly, <http://dbpedia.org/resource/William_Godwin> was a crazy man.",
                  "A silly link.",
@@ -69,7 +70,23 @@ class ScrivenerTest < Test::Unit::TestCase
                  "bold text."])
   end
 
-  def test_should_replace_title_names_by_links
-    
+  def test_should_parse_pages
+    @scrivener.parse_pages
+    assert_equal(@scrivener.articles, 
+                 [
+                  ["AccessibleComputing", 
+                   ["REDIRECT <http://dbpedia.org/resource/Computer_accessibility>."]],
+                  ["Anarchism", 
+                   ["<http://dbpedia.org/resource/William_Godwin>, the first to formulate the political and economical conceptions of <http://dbpedia.org/resource/Anarchism>, even though he did not give that name to the ideas developed in his work.",
+                  "Anarcho-communist Joseph Déjacque, the first person to use the term libertarian in a political sense and self-proclaimed advocate of libertarianism, needs to be added here.",
+                  "His work and stances on <http://dbpedia.org/resource/Anarchism> are very relevant to this particular section of the article.",
+                  "Additionally, his criticisms of Pierre-Joseph Proudhon's mutualism are very relevant here.",
+                 "Honestly, <http://dbpedia.org/resource/William_Godwin> was a crazy man.",
+                 "A silly link.",
+                 "A numbered list.",
+                 "bold text."
+                   ]
+                  ]
+                 ])
   end
 end
