@@ -1,94 +1,132 @@
 # -*- coding: utf-8 -*-
-require 'nokogiri'
 require 'test/unit'
 require './src/scrivener.rb'
 
 class ScrivenerTest < Test::Unit::TestCase
   def setup
-    @wikipedia_dump = './spec/mock/wikipedia_dump_sample.xml'
-    @invalid_xml_file = './spec/mock/invalid_xml_file.xml'
+    @text = 'Anarchism
 
-    @example_text = "==Etymology and terminology==
-      {{Redirect|Anarchist|the fictional character|Anarchist (comics)}}
-      {{Redirect|Anarchists}}
-      {{pp-move-indef}}{{Use dmy dates|date=July 2012}}
-      {{Anarchism sidebar}}
+Anarchism is often defined as a <db id=/Political_philosophy>political philosophy</db> which holds the <db id=/State_(polity)>state</db> to be undesirable, unnecessary, or harmful. However, others argue that while anti-statism is central, it is inadequate to define anarchism. Therefore, they argue instead that anarchism entails opposing <db id=/Authority>authority</db> or <db id=/Hierarchical_organization>hierarchical organization</db> in the conduct of human relations, including, but not only, the state system. Proponents of anarchism, known as "anarchists", advocate <db id=/Stateless_society>stateless societies</db> based on non-<db id=/Hierarchy>hierarchical</db> <db id=/Free_association_(communism_and_anarchism)>free associations</db>.
+As a subtle and anti-dogmatic philosophy, anarchism draws on many currents of thought and strategy. Anarchism does not offer a fixed body of doctrine from a single particular world view, instead fluxing and flowing as a philosophy. There are many types and traditions of anarchism, not all of which are mutually exclusive. <db id=/Anarchist_schools_of_thought>Anarchist schools of thought</db> can differ fundamentally, supporting anything from extreme <db id=/Individualism>individualism</db> to complete collectivism. Strains of anarchism have often been divided into the categories of <db id=/Social_anarchism>social</db> and <db id=/Individualist_anarchism>individualist anarchism</db> or similar dual classifications.
+Anarchism as a mass <db id=/Social_movement>social movement</db> has regularly endured fluctuations in popularity. The central tendency of anarchism as a social movement has been represented by <db id=/Anarchist_communism>anarcho-communism</db> and <db id=/Anarcho-syndicalism>anarcho-syndicalism</db>, with <db id=/Individualist_anarchism>individualist anarchism</db> being primarily a literary phenomenon which nevertheless did have an impact on the bigger currents and individualists have also participated in large anarchist organizations.
+Etymology and terminology.
+'
 
-      [[File:WilliamGodwin.jpg|left|thumb|[[William Godwin]], &quot;the first to formulate the political and economical conceptions of anarchism, even though he did not give that name to the ideas developed in his work&quot;.&lt;ref name=&quot;EB1910&quot; /&gt;]]
-      &lt;!--Anarcho-communist Joseph Déjacque, the first person to use the term &quot;libertarian&quot; in a political sense and self-proclaimed advocate of libertarianism, needs to be added here. His work and stances on anarchism are very relevant to this particular section of the article. Additionally, his criticisms of Pierre-Joseph Proudhon's mutualism are very relevant here.--&gt;
-      Honestly, [[William Godwin]] was a crazy man.
-      * A silly link
-      ----
-      # A numbered list
-      '''bold text'''
-      [[File:Leo-Kanner.jpeg|thumb|upright|alt=Head and shoulders of a man in his early 60s in coat and tie, facing slightly to his right. He is balding and has a serious but slightly smiling expression.|[[Leo Kanner]] introduced the label ''early infantile autism'' in 1943.]]
-"
+    @example_text = '<doc id="12" url="http://en.wikipedia.org/wiki?curid=12" title="Anarchism">' + @text + '</doc>'
 
-    @example_title = "Anarchism"
-
-    @scrivener = Scrivener.new(@wikipedia_dump)
-  end
-
-  def test_should_open_wikimedia_dump_file
-    file = File.open(@wikipedia_dump, 'r')
-    assert(File.identical?(@scrivener.raw_wikipedia_dump_file, file))
-  end
-
-  # I assume that the XML is correctly parsed by the Nokogiri library if no exception
-  # is raised. Therefore, no unit test for this feature will be inserted here.
-
-  def test_should_parser_valid_xml_file
-    assert_nothing_raised do
-      @scrivener = Scrivener.new(@wikipedia_dump)
-    end
-
-    assert_raise Nokogiri::XML::SyntaxError do
-      Scrivener.new(@invalid_xml_file)
-    end
-  end
-
-  def test_should_parse_raw_file
-    assert_equal(@scrivener.processed_wikipedia_dump.nil?, false)
+    @scrivener = Scrivener.new('./spec/mocks/wiki_00', './spec/mocks/dbpedia_relations')
   end
 
   def test_should_detect_articles
-    @scrivener.read_pages
-
-    assert_equal(@scrivener.articles.size, 2)
-
-    assert_equal(@scrivener.articles.first, ['AccessibleComputing', '#REDIRECT [[Computer accessibility]] {{R from CamelCase}}'])
+    assert_equal(@scrivener.articles.size, 1)
+    assert_equal(@scrivener.articles.first, ['Anarchism', @text])
   end
 
-  def test_should_break_text_into_lines_and_resolve_links
-    assert_equal(@scrivener.parse_text(@example_title, @example_text), 
-                 ["<http://dbpedia.org/resource/William_Godwin>, the first to formulate the political and economical conceptions of <http://dbpedia.org/resource/Anarchism>, even though he did not give that name to the ideas developed in his work.",
-                  "Anarcho-communist Joseph Déjacque, the first person to use the term libertarian in a political sense and self-proclaimed advocate of libertarianism, needs to be added here.",
-                  "His work and stances on <http://dbpedia.org/resource/Anarchism> are very relevant to this particular section of the article.",
-                  "Additionally, his criticisms of Pierre-Joseph Proudhon's mutualism are very relevant here.",
-                  "Honestly, <http://dbpedia.org/resource/William_Godwin> was a crazy man.",
-                  "A silly link.",
-                  "A numbered list.",
-                  "bold text.",
-                  "<http://dbpedia.org/resource/Leo_Kanner> introduced the label early infantile autism in 1943."])
+  def test_should_break_text_into_lines
+    assert_equal(@scrivener.break_into_sentences(['Anarchism', @text]),
+                 ['Anarchism',
+                  'Anarchism is often defined as a <db id=/Political_philosophy>political philosophy</db> which holds the <db id=/State_(polity)>state</db> to be undesirable, unnecessary, or harmful',
+                  'However, others argue that while anti-statism is central, it is inadequate to define anarchism',
+                  'Therefore, they argue instead that anarchism entails opposing <db id=/Authority>authority</db> or <db id=/Hierarchical_organization>hierarchical organization</db> in the conduct of human relations, including, but not only, the state system',
+                  'Proponents of anarchism, known as "anarchists", advocate <db id=/Stateless_society>stateless societies</db> based on non-<db id=/Hierarchy>hierarchical</db> <db id=/Free_association_(communism_and_anarchism)>free associations</db>',
+                  'As a subtle and anti-dogmatic philosophy, anarchism draws on many currents of thought and strategy',
+                  'Anarchism does not offer a fixed body of doctrine from a single particular world view, instead fluxing and flowing as a philosophy',
+                  'There are many types and traditions of anarchism, not all of which are mutually exclusive', 
+                  '<db id=/Anarchist_schools_of_thought>Anarchist schools of thought</db> can differ fundamentally, supporting anything from extreme <db id=/Individualism>individualism</db> to complete collectivism',
+                  'Strains of anarchism have often been divided into the categories of <db id=/Social_anarchism>social</db> and <db id=/Individualist_anarchism>individualist anarchism</db> or similar dual classifications',
+                  'Anarchism as a mass <db id=/Social_movement>social movement</db> has regularly endured fluctuations in popularity',
+                  'The central tendency of anarchism as a social movement has been represented by <db id=/Anarchist_communism>anarcho-communism</db> and <db id=/Anarcho-syndicalism>anarcho-syndicalism</db>, with <db id=/Individualist_anarchism>individualist anarchism</db> being primarily a literary phenomenon which nevertheless did have an impact on the bigger currents and individualists have also participated in large anarchist organizations',
+                  'Etymology and terminology'])
   end
 
-  def test_should_parse_pages
-    @scrivener.parse_pages
-    assert_equal(@scrivener.articles, 
-                 [
-                  ["AccessibleComputing", 
-                   ["REDIRECT <http://dbpedia.org/resource/Computer_accessibility>."]],
-                  ["Anarchism", 
-                   ["<http://dbpedia.org/resource/William_Godwin>, the first to formulate the political and economical conceptions of <http://dbpedia.org/resource/Anarchism>, even though he did not give that name to the ideas developed in his work.",
-                  "Anarcho-communist Joseph Déjacque, the first person to use the term libertarian in a political sense and self-proclaimed advocate of libertarianism, needs to be added here.",
-                  "His work and stances on <http://dbpedia.org/resource/Anarchism> are very relevant to this particular section of the article.",
-                  "Additionally, his criticisms of Pierre-Joseph Proudhon's mutualism are very relevant here.",
-                 "Honestly, <http://dbpedia.org/resource/William_Godwin> was a crazy man.",
-                 "A silly link.",
-                 "A numbered list.",
-                 "bold text."
-                   ]
-                  ]
-                 ])
+  def test_should_convert_title_to_dbpedia_uri
+    assert_equal(@scrivener.title_to_dbpedia_uri("Anarchism"), "/Anarchism")
+    assert_equal(@scrivener.title_to_dbpedia_uri("Politics of Angola"), "/Politics_of_Angola")
+    assert_equal(@scrivener.title_to_dbpedia_uri("Apollo 8"), "/Apollo_8")
+    assert_equal(@scrivener.title_to_dbpedia_uri("Gustav Kirchhoff"), "/Gustav_Kirchhoff")
+    assert_equal(@scrivener.title_to_dbpedia_uri("mineral water"), "/Mineral_water")
+  end
+
+  def test_should_convert_dbpedia_uri_to_title
+    assert_equal(@scrivener.dbpedia_uri_to_title("/Anarchism"), "Anarchism")
+    assert_equal(@scrivener.dbpedia_uri_to_title("/Politics_of_Angola"), "Politics of Angola")
+    assert_equal(@scrivener.dbpedia_uri_to_title("/Apollo_8"), "Apollo 8")
+    assert_equal(@scrivener.dbpedia_uri_to_title("/Gustav_Kirchhoff"), "Gustav Kirchhoff")
+    assert_equal(@scrivener.dbpedia_uri_to_title("/Mineral_water"), "Mineral water")
+  end
+
+  def test_should_isolate_ids_and_pure_text
+    assert_equal(@scrivener.isolate_ids_and_pure_text(""), [""])
+    assert_equal(@scrivener.isolate_ids_and_pure_text("<db id=/Anarchism>Anarchism</db>"), ["<db id=/Anarchism>Anarchism</db>"])
+    assert_equal(@scrivener.isolate_ids_and_pure_text("Anarchism"), ["Anarchism"])
+    assert_equal(@scrivener.isolate_ids_and_pure_text("<db id=/Anarchism>Anarchism</db> as a mass <db id=/Social_movement>social movement</db> has regularly endured fluctuations in popularity"), ["<db id=/Anarchism>Anarchism</db>", "as a mass", "<db id=/Social_movement>social movement</db>", "has regularly endured fluctuations in popularity"])
+    assert_equal(@scrivener.isolate_ids_and_pure_text("       <db id=/Anarchism>Anarchism</db> as a mass <db id=/Social_movement>social movement</db> has regularly endured fluctuations in popularity        "), ["<db id=/Anarchism>Anarchism</db>", "as a mass", "<db id=/Social_movement>social movement</db>", "has regularly endured fluctuations in popularity"])
+    assert_equal(@scrivener.isolate_ids_and_pure_text('Proponents of <db id=/Anarchism>anarchism</db>, known as "anarchists", advocate <db id=/Stateless_society>stateless societies</db> based on non-<db id=/Hierarchy>hierarchical</db> <db id=/Free_association_(communism_and_anarchism)>free associations</db>.'), ['Proponents of', '<db id=/Anarchism>anarchism</db>,', 'known as "anarchists", advocate', '<db id=/Stateless_society>stateless societies</db>', 'based on', 'non-<db id=/Hierarchy>hierarchical</db>', '<db id=/Free_association_(communism_and_anarchism)>free associations</db>.'])
+  end
+
+  def test_should_convert_dbpedia_relations_to_regexp
+    assert_equal(@scrivener._str_dbpedia_relations_names_to_regexp(@scrivener.dbpedia_info['/Anarchism']), "Political philosophy|Social movement")
+    assert_equal(@scrivener._str_dbpedia_relations_names_to_regexp(@scrivener.dbpedia_info['/Irving_Shulman']), "Rebel without a case")
+    assert_equal(@scrivener._str_dbpedia_relations_names_to_regexp([['/Irving_Shulman', '/the_man']]), "Irving Shulman|Irving|Shulman")
+  end
+
+  def test_should_create_re_for_enrichment
+    assert_equal(@scrivener.re_for_enrichment('Anarchism', @scrivener.dbpedia_info), /(Anarchism|Political philosophy|Social movement)/i)
+    assert_equal(@scrivener.re_for_enrichment('Irving Shulman', @scrivener.dbpedia_info), /(Irving Shulman|Irving|Shulman|Rebel without a case)/i)
+  end
+
+  def test_should_resolve_references_to_uri
+    assert_equal(@scrivener.resolve_match_to_uri('Shulman', 'Irving Shulman', @scrivener.dbpedia_info), '/Irving_Shulman')
+    assert_equal(@scrivener.resolve_match_to_uri('Irving', 'Irving Shulman', @scrivener.dbpedia_info), '/Irving_Shulman')
+    assert_equal(@scrivener.resolve_match_to_uri('Social movement', 'Anarchism', @scrivener.dbpedia_info), '/Social_movement')
+    assert_equal(@scrivener.resolve_match_to_uri('Social Movement', 'Anarchism', @scrivener.dbpedia_info), '/Social_movement')
+  end
+
+  def test_should_enrich_sentences_based_on_title_and_dbpedia
+    assert_equal(@scrivener.enrich('<db id=/Anarchism>Anarchism</db> and anarchism as a mass social movement has regularly endured fluctuations in popularity', 'Anarchism', @scrivener.dbpedia_info),
+                 '<db id=/Anarchism>Anarchism</db> and <db id=/Anarchism>anarchism</db> as a mass <db id=/Social_movement>social movement</db> has regularly endured fluctuations in popularity')
+
+    assert_equal(@scrivener.enrich('Shulman wrote Rebel Without a Case.', 'Irving Shulman', @scrivener.dbpedia_info),
+                 '<db id=/Irving_Shulman>Shulman</db> wrote <db id=/Rebel_without_a_case>Rebel Without a Case</db>.')
+  end
+
+  def test_should_apply_combinatorics_over_instances_on_sentences
+    assert_equal(@scrivener.combinatorics_over_pairs_of_instances(@scrivener.isolate_ids_and_pure_text('<db id=/Anarchism>Anarchism</db> is often defined as a <db id=/Political_philosophy>political philosophy</db> which holds the <db id=/State_(polity)>state</db> to be undesirable, unnecessary, or harmful')), ['</Anarchism> is often defined as a </Political_philosophy> which holds the state to be undesirable, unnecessary, or harmful',
+                                                                                                                                                                                                                                                                                                                        '</Anarchism> is often defined as a political philosophy which holds the </State_(polity)> to be undesirable, unnecessary, or harmful',
+                                                                                                                                                                                                                                                                                                                        'Anarchism is often defined as a </Political_philosophy> which holds the </State_(polity)> to be undesirable, unnecessary, or harmful'])
+
+    assert_equal(@scrivener.combinatorics_over_pairs_of_instances(@scrivener.isolate_ids_and_pure_text('Proponents of <db id=/Anarchism>anarchism</db>, known as "anarchists", advocate <db id=/Stateless_society>stateless societies</db> based on non-<db id=/Hierarchy>hierarchical</db> <db id=/Free_association_(communism_and_anarchism)>free associations</db>')),['Proponents of </Anarchism>, known as "anarchists", advocate </Stateless_society> based on non-hierarchical free associations', 'Proponents of </Anarchism>, known as "anarchists", advocate stateless societies based on non-</Hierarchy> free associations', 'Proponents of </Anarchism>, known as "anarchists", advocate stateless societies based on non-hierarchical </Free_association_(communism_and_anarchism)>', 'Proponents of anarchism, known as "anarchists", advocate </Stateless_society> based on non-</Hierarchy> free associations', 'Proponents of anarchism, known as "anarchists", advocate </Stateless_society> based on non-hierarchical </Free_association_(communism_and_anarchism)>', 'Proponents of anarchism, known as "anarchists", advocate stateless societies based on non-</Hierarchy> </Free_association_(communism_and_anarchism)>'] )
+  end
+
+  # here insert heuristics from DBpedia relations from Anarchism and already define relations
+  def test_extract_useful_sentences
+    assert_equal(@scrivener.extract_sentences,
+                 ['</Anarchism> is often defined as a </Political_philosophy> which holds the state to be undesirable, unnecessary, or harmful',
+                  '</Anarchism> is often defined as a political philosophy which holds the </State_(polity)> to be undesirable, unnecessary, or harmful',
+                  'Anarchism is often defined as a </Political_philosophy> which holds the </State_(polity)> to be undesirable, unnecessary, or harmful',
+                  "Therefore, they argue instead that </Anarchism> entails opposing </Authority> or hierarchical organization in the conduct of human relations, including, but not only, the state system",
+                  "Therefore, they argue instead that </Anarchism> entails opposing authority or </Hierarchical_organization> in the conduct of human relations, including, but not only, the state system",
+                  "Therefore, they argue instead that anarchism entails opposing </Authority> or </Hierarchical_organization> in the conduct of human relations, including, but not only, the state system",
+                  'Proponents of </Anarchism>, known as "anarchists", advocate </Stateless_society> based on non-hierarchical free associations',
+                  'Proponents of </Anarchism>, known as "anarchists", advocate stateless societies based on non-</Hierarchy> free associations',
+                  'Proponents of </Anarchism>, known as "anarchists", advocate stateless societies based on non-hierarchical </Free_association_(communism_and_anarchism)>',
+                  'Proponents of anarchism, known as "anarchists", advocate </Stateless_society> based on non-</Hierarchy> free associations',
+                  'Proponents of anarchism, known as "anarchists", advocate </Stateless_society> based on non-hierarchical </Free_association_(communism_and_anarchism)>',
+                  'Proponents of anarchism, known as "anarchists", advocate stateless societies based on non-</Hierarchy> </Free_association_(communism_and_anarchism)>',
+                  '</Anarchist_schools_of_thought> can differ fundamentally, supporting anything from extreme </Individualism> to complete collectivism',
+                  "Strains of </Anarchism> have often been divided into the categories of </Social_anarchism> and individualist anarchism or similar dual classifications",
+                  "Strains of </Anarchism> have often been divided into the categories of social and </Individualist_anarchism> or similar dual classifications",
+                  "Strains of anarchism have often been divided into the categories of </Social_anarchism> and </Individualist_anarchism> or similar dual classifications",
+                  '</Anarchism> as a mass </Social_movement> has regularly endured fluctuations in popularity',
+                  "The central tendency of </Anarchism> as a </Social_movement> has been represented by anarcho-communism and anarcho-syndicalism, with individualist anarchism being primarily a literary phenomenon which nevertheless did have an impact on the bigger currents and individualists have also participated in large anarchist organizations",
+                  "The central tendency of </Anarchism> as a social movement has been represented by </Anarchist_communism> and anarcho-syndicalism, with individualist anarchism being primarily a literary phenomenon which nevertheless did have an impact on the bigger currents and individualists have also participated in large anarchist organizations",
+                  "The central tendency of </Anarchism> as a social movement has been represented by anarcho-communism and </Anarcho-syndicalism>, with individualist anarchism being primarily a literary phenomenon which nevertheless did have an impact on the bigger currents and individualists have also participated in large anarchist organizations",
+                  "The central tendency of </Anarchism> as a social movement has been represented by anarcho-communism and anarcho-syndicalism, with </Individualist_anarchism> being primarily a literary phenomenon which nevertheless did have an impact on the bigger currents and individualists have also participated in large anarchist organizations",
+                  "The central tendency of anarchism as a </Social_movement> has been represented by </Anarchist_communism> and anarcho-syndicalism, with individualist anarchism being primarily a literary phenomenon which nevertheless did have an impact on the bigger currents and individualists have also participated in large anarchist organizations",
+                  "The central tendency of anarchism as a </Social_movement> has been represented by anarcho-communism and </Anarcho-syndicalism>, with individualist anarchism being primarily a literary phenomenon which nevertheless did have an impact on the bigger currents and individualists have also participated in large anarchist organizations",
+                  "The central tendency of anarchism as a </Social_movement> has been represented by anarcho-communism and anarcho-syndicalism, with </Individualist_anarchism> being primarily a literary phenomenon which nevertheless did have an impact on the bigger currents and individualists have also participated in large anarchist organizations",
+                  "The central tendency of anarchism as a social movement has been represented by </Anarchist_communism> and </Anarcho-syndicalism>, with individualist anarchism being primarily a literary phenomenon which nevertheless did have an impact on the bigger currents and individualists have also participated in large anarchist organizations",
+                  "The central tendency of anarchism as a social movement has been represented by </Anarchist_communism> and anarcho-syndicalism, with </Individualist_anarchism> being primarily a literary phenomenon which nevertheless did have an impact on the bigger currents and individualists have also participated in large anarchist organizations",
+                  "The central tendency of anarchism as a social movement has been represented by anarcho-communism and </Anarcho-syndicalism>, with </Individualist_anarchism> being primarily a literary phenomenon which nevertheless did have an impact on the bigger currents and individualists have also participated in large anarchist organizations"])
   end
 end
