@@ -1,4 +1,6 @@
 scrivener
 =========
 
-A Wikipedia dump parser and DBpedia entity annotator
+A NLP package for Wikipedia sentence extraction and annotation.
+
+(in development)
