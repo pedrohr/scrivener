@@ -15,6 +15,11 @@ Etymology and terminology.
     @example_text = '<doc id="12" url="http://en.wikipedia.org/wiki?curid=12" title="Anarchism">' + @text + '</doc>'
 
     @scrivener = Scrivener.new('./spec/mocks/wiki_00', './spec/mocks/dbpedia_relations')
+
+    # Example of dbpedia_relations:
+    # {"/Anarchism"=>
+    #  {"/Political_philosophy" => "/philosophy", "/Social_movement" => "/partOf"},
+    #  "/Irving_Shulman"=> {"/Rebel_without_a_case" => "/wrote"}}
   end
 
   def test_should_detect_articles
@@ -96,6 +101,12 @@ Etymology and terminology.
                                                                                                                                                                                                                                                                                                                         'Anarchism is often defined as a </Political_philosophy> which holds the </State_(polity)> to be undesirable, unnecessary, or harmful'])
 
     assert_equal(@scrivener.combinatorics_over_pairs_of_instances(@scrivener.isolate_ids_and_pure_text('Proponents of <db id=/Anarchism>anarchism</db>, known as "anarchists", advocate <db id=/Stateless_society>stateless societies</db> based on non-<db id=/Hierarchy>hierarchical</db> <db id=/Free_association_(communism_and_anarchism)>free associations</db>')),['Proponents of </Anarchism>, known as "anarchists", advocate </Stateless_society> based on non-hierarchical free associations', 'Proponents of </Anarchism>, known as "anarchists", advocate stateless societies based on non-</Hierarchy> free associations', 'Proponents of </Anarchism>, known as "anarchists", advocate stateless societies based on non-hierarchical </Free_association_(communism_and_anarchism)>', 'Proponents of anarchism, known as "anarchists", advocate </Stateless_society> based on non-</Hierarchy> free associations', 'Proponents of anarchism, known as "anarchists", advocate </Stateless_society> based on non-hierarchical </Free_association_(communism_and_anarchism)>', 'Proponents of anarchism, known as "anarchists", advocate stateless societies based on non-</Hierarchy> </Free_association_(communism_and_anarchism)>'] )
+  end
+
+  def test_should_include_only_sentences_with_relations_between_instances
+    assert_equal(@scrivener.judge_sentence('/Anarchism', '/Political_philosophy'), '/philosophy')
+    assert_equal(@scrivener.judge_sentence('/Anarchism', '/State_(polity)'), false)
+    assert_equal(@scrivener.judge_sentence('/Anarchism', '/Social_movement'), '/partOf')
   end
 
   # here insert heuristics from DBpedia relations from Anarchism and already define relations

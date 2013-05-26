@@ -156,6 +156,18 @@ class Scrivener
     return parts.join(" ")
   end
 
+  def judge_sentence(instance_1, instance_2)
+    unless @dbpedia_info[instance_1].nil?
+      return @dbpedia_info[instance_1][instance_2] if @dbpedia_info[instance_1][instance_2]
+    end
+
+    unless @dbpedia_info[instance_2].nil?
+      return @dbpedia_info[instance_2][instance_1] if @dbpedia_info[instance_2][instance_1]
+    end
+
+    return false
+  end
+  
   def combinatorics_over_pairs_of_instances(tokenized_sentence)
     sentences = []
     instances_indexes = []
