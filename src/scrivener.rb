@@ -168,7 +168,7 @@ class Scrivener
     return false
   end
   
-  def combinatorics_over_pairs_of_instances(tokenized_sentence)
+  def combinatorics_over_pairs_of_instances(tokenized_sentence, filter)
     sentences = []
     instances_indexes = []
     
@@ -181,10 +181,19 @@ class Scrivener
     0.upto(instances_indexes.size-1) do |i|
       (i+1).upto(instances_indexes.size-1) do |j|
         sentence = []
+        i1 = ""
+        i2 = ""
         tokenized_sentence.each_with_index do |token, index|
           if token.include?("<db")
             if (index == instances_indexes[i] or index == instances_indexes[j])
-              term = "<" + token.split(">").first.match(/id=(.+)/)[1] + ">"
+              term_id = token.split(">").first.match(/id=(.+)/)[1]
+              term = "<" + term_id + ">"
+
+              if i1.empty?
+                i1 = term_id
+              else
+                i2 = term_id
+              end
             else
               term = token.match(/>(.+)</)[1]
             end
@@ -193,7 +202,11 @@ class Scrivener
             sentence.push(token)
           end
         end
-        sentences.push(sentence.join(" "))
+        if filter
+          sentences.push(sentence.join(" ")) if judge_sentence(i1, i2)
+        else
+          sentences.push(sentence.join(" "))
+        end
       end
     end
 
@@ -234,7 +247,7 @@ class Scrivener
       end
 
       #combinatorics over pairs
-      filtered_sentences.push(combinatorics_over_pairs_of_instances(tokens))
+      filtered_sentences.push(combinatorics_over_pairs_of_instances(tokens, true))
       false
     end
 
