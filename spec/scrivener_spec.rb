@@ -112,8 +112,8 @@ Etymology and terminology.
   # here insert heuristics from DBpedia relations from Anarchism and already define relations
   def test_extract_useful_sentences
     assert_equal(@scrivener.extract_sentences,
-                 ['</Anarchism> is often defined as a </Political_philosophy> which holds the state to be undesirable, unnecessary, or harmful',
-                  '</Anarchism> as a mass </Social_movement> has regularly endured fluctuations in popularity',
-                  "The central tendency of </Anarchism> as a </Social_movement> has been represented by anarcho-communism and anarcho-syndicalism, with individualist anarchism being primarily a literary phenomenon which nevertheless did have an impact on the bigger currents and individualists have also participated in large anarchist organizations"])
+                 [['</Anarchism> is often defined as a </Political_philosophy> which holds the state to be undesirable, unnecessary, or harmful', '/philosophy'],
+                  ['</Anarchism> as a mass </Social_movement> has regularly endured fluctuations in popularity', '/partOf'],
+                  ["The central tendency of </Anarchism> as a </Social_movement> has been represented by anarcho-communism and anarcho-syndicalism, with individualist anarchism being primarily a literary phenomenon which nevertheless did have an impact on the bigger currents and individualists have also participated in large anarchist organizations", '/partOf']])
   end
 end

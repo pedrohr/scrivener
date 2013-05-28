@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-require 'pp'
 class Scrivener
   attr_reader :articles, :dbpedia_info
 
@@ -202,11 +201,16 @@ class Scrivener
             sentence.push(token)
           end
         end
+
+        sentence = sentence.join(" ")
+
         if filter
-          sentences.push(sentence.join(" ")) if judge_sentence(i1, i2)
+          relation = judge_sentence(i1, i2)
+          sentences.push([sentence, relation]) if relation
         else
-          sentences.push(sentence.join(" "))
+          sentences.push(sentence) unless sentence.empty?
         end
+
       end
     end
 
@@ -244,13 +248,16 @@ class Scrivener
       #less than 2 instances
       if instances.size < 2
         true
+      else
+        sentences = combinatorics_over_pairs_of_instances(tokens, true)
+        sentences.each do |sentence|
+          filtered_sentences.push(sentence) unless sentence.empty?
+        end
       end
 
-      #combinatorics over pairs
-      filtered_sentences.push(combinatorics_over_pairs_of_instances(tokens, true))
       false
     end
 
-    return filtered_sentences.flatten
+    return filtered_sentences
   end
 end
