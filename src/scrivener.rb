@@ -187,7 +187,7 @@ class Scrivener
             if (index == instances_indexes[i] or index == instances_indexes[j])
               term_id = token.split(">").first.match(/id=(.+)/)[1]
               term_used = token.match(/>(.+)</)[1]
-              term = "<" + term_used + term_id + ">"
+              term = "<" + term_used.gsub(" ", "_") + term_id + ">"
 
               if i1.empty?
                 i1 = term_id
