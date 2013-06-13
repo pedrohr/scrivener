@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+require 'pp'
 class Scrivener
   attr_reader :articles, :dbpedia_info
 
@@ -24,6 +25,7 @@ class Scrivener
       @articles = []
       lines = File.readlines(wikipedia_articles_file)
 
+      print "\rClustering lines by articles titles..."
       lines.each do |line|
         if (line[0..3] == '<doc')
           @articles.push([line.match(/title=\"(.+)\"/)[1], ''])
@@ -35,14 +37,32 @@ class Scrivener
       lines = nil
     end
 
+    print "\rLoading dbpedia relations file..."
     @dbpedia_info = _load_object(dbpedia_relations_file)
+    print "\rDone!\n"
   end
 
   def break_into_sentences(article)
     sentences = []
     article[1].split("\n").each do |paragraphs|
+      new_paragraph = true
       paragraphs.split(".").each do |sentence|
-        sentences.push(sentence.strip) if sentence.size > 3
+        if sentence.size > 3
+          if new_paragraph
+            sentences.push(sentence.strip)
+            new_paragraph = false
+          else
+            if sentence[0] != " "
+              if sentences.size == 0
+                sentences.push(sentence.strip)
+              else
+                sentences[sentences.size-1] += ".#{sentence}"
+              end
+            else
+              sentences.push(sentence.strip)
+            end
+          end
+        end
       end
     end
     return sentences
@@ -83,11 +103,11 @@ class Scrivener
   
   # Heuristic for name cases
   def _str_title_regexp(title)
-    regexp = "#{title}"
+    regexp = Regexp.quote("#{title}")
 
     split = title.split(" ")
     if split.size > 1 and split.last == split.last.capitalize
-      regexp += "|#{title.split(' ').first}|#{title.split(' ').last}"
+      regexp += "|#{Regexp.quote(title.split(' ').first)}|#{Regexp.quote(title.split(' ').last)}"
     end
 
     return regexp
@@ -195,6 +215,9 @@ class Scrivener
                 i2 = term_id
               end
             else
+              if token.match(/>(.+)</).nil?
+                pp tokenized_sentence
+              end
               term = token.match(/>(.+)</)[1]
             end
             sentence.push(token.gsub(/<(.+)>/, term))
@@ -222,16 +245,23 @@ class Scrivener
     sentences = []
 
     #enrichment
+    i = 1
     @articles.each do |article|
+      print "\rBreaking and enriching sentences of article #{i} of #{@articles.size}..."
+
       art_sentences = break_into_sentences(article)
       art_sentences.each do |sentence|
         sentences.push(enrich(sentence, article[0], @dbpedia_info))
       end
+
+      i += 1
     end
 
     #filtering
+    i = 1
     filtered_sentences = []
     sentences.delete_if do |sentence|
+      print "\rProcessing sentence #{i} of #{sentences.size}..."
       tokens = isolate_ids_and_pure_text(sentence)
 
       #too short

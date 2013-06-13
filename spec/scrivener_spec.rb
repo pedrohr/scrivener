@@ -28,6 +28,8 @@ Etymology and terminology.
   end
 
   def test_should_break_text_into_lines
+    assert_equal(@scrivener.break_into_sentences(['Bug point id', 'Weird example with <db id=/1q21.1_duplication_syndrome>syndrome</db>. La la.']), ['Weird example with <db id=/1q21.1_duplication_syndrome>syndrome</db>', 'La la'])
+    
     assert_equal(@scrivener.break_into_sentences(['Anarchism', @text]),
                  ['Anarchism',
                   'Anarchism is often defined as a <db id=/Political_philosophy>political philosophy</db> which holds the <db id=/State_(polity)>state</db> to be undesirable, unnecessary, or harmful',
@@ -70,14 +72,15 @@ Etymology and terminology.
   end
 
   def test_should_convert_dbpedia_relations_to_regexp
-    assert_equal(@scrivener._str_dbpedia_relations_names_to_regexp(@scrivener.dbpedia_info['/Anarchism']), "Political philosophy|Social movement")
-    assert_equal(@scrivener._str_dbpedia_relations_names_to_regexp(@scrivener.dbpedia_info['/Irving_Shulman']), "Rebel without a case")
-    assert_equal(@scrivener._str_dbpedia_relations_names_to_regexp([['/Irving_Shulman', '/the_man']]), "Irving Shulman|Irving|Shulman")
+    assert_equal(@scrivener._str_dbpedia_relations_names_to_regexp(@scrivener.dbpedia_info['/Anarchism']), "Political\\ philosophy|Social\\ movement")
+    assert_equal(@scrivener._str_dbpedia_relations_names_to_regexp(@scrivener.dbpedia_info['/Irving_Shulman']), "Rebel\\ without\\ a\\ case")
+    assert_equal(@scrivener._str_dbpedia_relations_names_to_regexp([['/Irving_Shulman', '/the_man']]), "Irving\\ Shulman|Irving|Shulman")
   end
 
   def test_should_create_re_for_enrichment
-    assert_equal(@scrivener.re_for_enrichment('Anarchism', @scrivener.dbpedia_info), /(Anarchism|Political philosophy|Social movement)/i)
-    assert_equal(@scrivener.re_for_enrichment('Irving Shulman', @scrivener.dbpedia_info), /(Irving Shulman|Irving|Shulman|Rebel without a case)/i)
+    assert_equal(@scrivener.re_for_enrichment('Anarchism', @scrivener.dbpedia_info), /(Anarchism|Political\ philosophy|Social\ movement)/i)
+    assert_equal(@scrivener.re_for_enrichment('Irving Shulman', @scrivener.dbpedia_info), /(Irving\ Shulman|Irving|Shulman|Rebel\ without\ a\ case)/i)
+    assert_equal(@scrivener.re_for_enrichment('Whig Party (United States)', @scrivener.dbpedia_info), /(Whig\ Party\ \(United\ States\)|Whig|States\))/i)
   end
 
   def test_should_resolve_references_to_uri
