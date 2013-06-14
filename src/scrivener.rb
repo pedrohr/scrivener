@@ -75,7 +75,9 @@ class Scrivener
 
     return [""] if sentence.empty?
 
-    sentence.gsub!("<br>", "")
+    ["<br>", "<>"].each do |bad|
+      sentence.gsub!(bad, "")
+    end
 
     sentence_splitted = []
     sentence.split(" ").each do |token|
@@ -203,48 +205,47 @@ class Scrivener
       end
     end
 
-    0.upto(instances_indexes.size-1) do |i|
-      (i+1).upto(instances_indexes.size-1) do |j|
-        sentence = []
-        i1 = ""
-        i2 = ""
-        tokenized_sentence.each_with_index do |token, index|
-          if token.include?("<db")
-            if (index == instances_indexes[i] or index == instances_indexes[j])
-              if token.split(">").first.match(/id=(.+)/).nil?
-                pp tokenized_sentence                
-              end
-              term_id = token.split(">").first.match(/id=(.+)/)[1]
-              term_used = token.match(/>(.+)</)[1]
-              term = "<" + term_used.gsub(" ", "_") + term_id + ">"
+    begin
+      0.upto(instances_indexes.size-1) do |i|
+        (i+1).upto(instances_indexes.size-1) do |j|
+          sentence = []
+          i1 = ""
+          i2 = ""
+          tokenized_sentence.each_with_index do |token, index|
+            if token.include?("<db")
+              if (index == instances_indexes[i] or index == instances_indexes[j])
+                term_id = token.split(">").first.match(/id=(.+)/)[1]
+                term_used = token.match(/>(.+)</)[1]
+                term = "<" + term_used.gsub(" ", "_") + term_id + ">"
 
-              if i1.empty?
-                i1 = term_id
+                if i1.empty?
+                  i1 = term_id
+                else
+                  i2 = term_id
+                end
               else
-                i2 = term_id
+                term = token.match(/>(.+)</)[1]
               end
+              sentence.push(token.gsub(/<(.+)>/, term))
             else
-              if token.match(/>(.+)</).nil?
-                pp tokenized_sentence
-              end
-              term = token.match(/>(.+)</)[1]
+              sentence.push(token)
             end
-            sentence.push(token.gsub(/<(.+)>/, term))
-          else
-            sentence.push(token)
           end
+
+          sentence = sentence.join(" ")
+
+          if filter
+            relation = judge_sentence(i1, i2)
+            sentences.push([sentence, relation]) if relation
+          else
+            sentences.push(sentence) unless sentence.empty?
+          end
+
         end
-
-        sentence = sentence.join(" ")
-
-        if filter
-          relation = judge_sentence(i1, i2)
-          sentences.push([sentence, relation]) if relation
-        else
-          sentences.push(sentence) unless sentence.empty?
-        end
-
       end
+    rescue
+      pp tokenized_sentence
+      return []
     end
 
     return sentences
