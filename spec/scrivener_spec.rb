@@ -28,6 +28,8 @@ Etymology and terminology.
   end
 
   def test_should_break_text_into_lines
+    assert_equal(@scrivener.break_into_sentences(['bla', 'American congressmen: <db id=/Jeremiah_haralson>Jeremiah Haralson</db>, <db id=/Benjamin_s._turner>Benjamin S. Turner</db>, and <db id=/Jamas_t._rapier>James T. Rapier</db>.']), ['American congressmen: <db id=/Jeremiah_haralson>Jeremiah Haralson</db>, <db id=/Benjamin_s._turner>Benjamin S. Turner</db>, and <db id=/Jamas_t._rapier>James T. Rapier</db>'])
+
     assert_equal(@scrivener.break_into_sentences(['Bug point id', 'Weird example with <db id=/1q21.1_duplication_syndrome>syndrome</db>. La la.']), ['Weird example with <db id=/1q21.1_duplication_syndrome>syndrome</db>', 'La la'])
     
     assert_equal(@scrivener.break_into_sentences(['Anarchism', @text]),
@@ -69,6 +71,8 @@ Etymology and terminology.
     assert_equal(@scrivener.isolate_ids_and_pure_text("<db id=/Anarchism>Anarchism</db> as a mass <db id=/Social_movement>social movement</db> has regularly endured fluctuations in popularity"), ["<db id=/Anarchism>Anarchism</db>", "as a mass", "<db id=/Social_movement>social movement</db>", "has regularly endured fluctuations in popularity"])
     assert_equal(@scrivener.isolate_ids_and_pure_text("       <db id=/Anarchism>Anarchism</db> as a mass <db id=/Social_movement>social movement</db> has regularly endured fluctuations in popularity        "), ["<db id=/Anarchism>Anarchism</db>", "as a mass", "<db id=/Social_movement>social movement</db>", "has regularly endured fluctuations in popularity"])
     assert_equal(@scrivener.isolate_ids_and_pure_text('Proponents of <db id=/Anarchism>anarchism</db>, known as "anarchists", advocate <db id=/Stateless_society>stateless societies</db> based on non-<db id=/Hierarchy>hierarchical</db> <db id=/Free_association_(communism_and_anarchism)>free associations</db>.'), ['Proponents of', '<db id=/Anarchism>anarchism</db>,', 'known as "anarchists", advocate', '<db id=/Stateless_society>stateless societies</db>', 'based on', 'non-<db id=/Hierarchy>hierarchical</db>', '<db id=/Free_association_(communism_and_anarchism)>free associations</db>.'])
+    assert_equal(@scrivener.isolate_ids_and_pure_text("In turn, the origin of <db id=/A>a</db>leph m<db id=/A>a</db>y h<db id=/A>a</db>ve been <db id=/A>a</db> <db id=/Pictogram>pictogram</db> of <db id=/A>a</db>n <db id=/Ox>ox</db> he<db id=/A>a</db>d in <db id=/Egyptian_hieroglyph>Egyptian hieroglyphs</db>, styled <db id=/A>a</db>s <db id=/A>a</db> tri<db id=/A>a</db>ngul<db id=/A>a</db>r he<db id=/A>a</db>d with 2 horns extended"), ["In turn, the origin of", "<db id=/A>a</db>leph", "m<db id=/A>a</db>y", "h<db id=/A>a</db>ve", "been", "<db id=/A>a</db>", "<db id=/Pictogram>pictogram</db>", "of", "<db id=/A>a</db>n", "<db id=/Ox>ox</db>", "he<db id=/A>a</db>d", "in", "<db id=/Egyptian_hieroglyph>Egyptian hieroglyphs</db>,", "styled", "<db id=/A>a</db>s", "<db id=/A>a</db>", "tri<db id=/A>a</db>", "ngul<db id=/A>a</db>r", "he<db id=/A>a</db>d", "with 2 horns extended"])
+    assert_equal(@scrivener.isolate_ids_and_pure_text("<br><db id=/Nepal>Nepal</db>, a South<br> <br> <db id=/Asia>Asia</db>n <br>"), ["<db id=/Nepal>Nepal</db>,", "a South", "<db id=/Asia>Asia</db>n"])
   end
 
   def test_should_convert_dbpedia_relations_to_regexp

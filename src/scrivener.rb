@@ -41,28 +41,18 @@ class Scrivener
     @dbpedia_info = _load_object(dbpedia_relations_file)
     print "\rDone!\n"
   end
-
+  
   def break_into_sentences(article)
     sentences = []
-    article[1].split("\n").each do |paragraphs|
-      new_paragraph = true
-      paragraphs.split(".").each do |sentence|
-        if sentence.size > 3
-          if new_paragraph
-            sentences.push(sentence.strip)
-            new_paragraph = false
-          else
-            if sentence[0] != " "
-              if sentences.size == 0
-                sentences.push(sentence.strip)
-              else
-                sentences[sentences.size-1] += ".#{sentence}"
-              end
-            else
-              sentences.push(sentence.strip)
-            end
-          end
+    article[1].split("\n").each do |paragraph|
+      opened = 0
+      paragraph.split(".").each do |sentence|
+        if opened != 0
+          sentences[sentences.size-1] += ".#{sentence}"
+        else
+          sentences.push(sentence.strip)
         end
+        opened += sentence.scan("<db").size - sentence.scan("</db>").size
       end
     end
     return sentences
@@ -85,12 +75,28 @@ class Scrivener
 
     return [""] if sentence.empty?
 
+    sentence.gsub!("<br>", "")
+
+    sentence_splitted = []
     sentence.split(" ").each do |token|
+      db = token.index("<db")
+      _db = token.index("</db>")
+      
+      if (not(db.nil? or _db.nil?) and db > _db)
+        insert = token.split("</db>")
+        sentence_splitted.push(insert.first + "</db>")
+        sentence_splitted.push(insert.last)
+      else
+        sentence_splitted.push(token)
+      end
+    end
+
+    sentence_splitted.each do |token|
       if (token.include?("<db") or to_push)
         to_push = false
 
         vec.push(token)
-      elsif token.include?("</db>")
+      elsif (token.include?("</db>") and not to_push)
         to_push = true
         vec[vec.size-1] = vec.last + " " + token
       else
@@ -205,6 +211,9 @@ class Scrivener
         tokenized_sentence.each_with_index do |token, index|
           if token.include?("<db")
             if (index == instances_indexes[i] or index == instances_indexes[j])
+              if token.split(">").first.match(/id=(.+)/).nil?
+                pp tokenized_sentence                
+              end
               term_id = token.split(">").first.match(/id=(.+)/)[1]
               term_used = token.match(/>(.+)</)[1]
               term = "<" + term_used.gsub(" ", "_") + term_id + ">"
@@ -257,10 +266,13 @@ class Scrivener
       i += 1
     end
 
+    print "Done!\n"
+
     #filtering
-    i = 1
+    i = 0
     filtered_sentences = []
     sentences.delete_if do |sentence|
+      i += 1
       print "\rProcessing sentence #{i} of #{sentences.size}..."
       tokens = isolate_ids_and_pure_text(sentence)
 
@@ -280,9 +292,9 @@ class Scrivener
       if instances.size < 2
         true
       else
-        sentences = combinatorics_over_pairs_of_instances(tokens, true)
-        sentences.each do |sentence|
-          filtered_sentences.push(sentence) unless sentence.empty?
+        comb_sentences = combinatorics_over_pairs_of_instances(tokens, true)
+        comb_sentences.each do |comb_sentence|
+          filtered_sentences.push(comb_sentence) unless sentence.empty?
         end
       end
 
